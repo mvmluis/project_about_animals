@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Pet Alerta — Login</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <link rel="icon" type="image/x-icon" th:href="@{'/favicon.ico?v=' + ${#dates.createNow().time}}">
+    <link rel="shortcut icon" type="image/x-icon" th:href="@{'/favicon.ico?v=' + ${#dates.createNow().time}}">
+</head>
+<body>
+
+<main class="auth">
+    <section class="auth-card">
+
+        <aside class="brand">
+            <h1>Pet Alerta 🐕‍🦺</h1>
+            <p>
+                Reporta animais perdidos, apoia <strong>resgates</strong> e encontra oportunidades de
+                <strong>adoção</strong> com base na <strong>localização</strong>.
+            </p>
+
+            <div class="badges">
+                <span class="badge">Reports por localização</span>
+                <span class="badge">Resgate & apoio</span>
+                <span class="badge">Pedidos de adoção</span>
+            </div>
+
+            <p class="small" style="margin-top:18px;">
+                Dica: ao criares um report ou pedido de resgate, indica a zona e pontos de referência
+                (rua, parque, estação) para acelerar a resposta.
+            </p>
+        </aside>
+
+        <div class="panel">
+            <h2>Login</h2>
+            <div class="subtitle">Entra para reportar, acompanhar resgates e fazer pedidos de adoção.</div>
+
+            <div class="alert alert-success" th:if="${param.registered}">
+                <span class="dot"></span>
+                <div>Conta criada. Faz login.</div>
+            </div>
+
+            <div class="alert alert-success" th:if="${param.logout}">
+                <span class="dot"></span>
+                <div>Sessão terminada.</div>
+            </div>
+
+            <div class="alert alert-error" th:if="${param.error}">
+                <span class="dot"></span>
+                <div>Credenciais inválidas.</div>
+            </div>
+
+            <form class="form" th:action="@{/login}" method="post" autocomplete="on">
+                <div class="field">
+                    <label for="username">Email</label>
+                    <div class="input">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M4 6h16v12H4V6Z" stroke="white" stroke-opacity=".9" stroke-width="1.5" />
+                            <path d="m5 7 7 6 7-6" stroke="white" stroke-opacity=".9" stroke-width="1.5" />
+                        </svg>
+                        <input id="username" type="email" name="username" placeholder="nome@exemplo.com" required>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label for="password">Password</label>
+                    <div class="input">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M7 10V8a5 5 0 0 1 10 0v2" stroke="white" stroke-opacity=".9" stroke-width="1.5" />
+                            <path d="M6 10h12v10H6V10Z" stroke="white" stroke-opacity=".9" stroke-width="1.5" />
+                            <path d="M12 14v3" stroke="white" stroke-opacity=".9" stroke-width="1.5" />
+                        </svg>
+                        <input id="password" type="password" name="password" placeholder="••••••••" required>
+                    </div>
+                </div>
+
+                <button class="btn" type="submit">Entrar</button>
+
+                <!-- ✅ Login com Google -->
+                <a class="btn"
+                   th:href="@{/oauth2/authorization/google}"
+                   style="display:inline-flex; justify-content:center; text-decoration:none; margin-top:10px;">
+                    Entrar com Google
+                </a>
+
+                <div class="link-row" style="margin-top:10px;">
+                    Ainda não tens conta? <a th:href="@{/register}">Criar conta</a>
+                </div>
+            </form>
+        </div>
+
+    </section>
+</main>
+
+</body>
+</html>

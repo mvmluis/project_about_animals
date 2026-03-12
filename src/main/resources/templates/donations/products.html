@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Doação de Produtos — Pet Alerta</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <link rel="icon" type="image/x-icon" th:href="@{'/favicon.ico?v=' + ${#dates.createNow().time}}">
+    <link rel="shortcut icon" type="image/x-icon" th:href="@{'/favicon.ico?v=' + ${#dates.createNow().time}}">
+</head>
+<body>
+<main class="auth">
+    <section class="auth-card" style="grid-template-columns: 1fr; width:min(900px, 100%);">
+        <div class="panel" style="padding:26px;">
+
+            <!-- Header -->
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px;">
+                <div>
+                    <h2 style="margin:0;">Doação de Produtos</h2>
+                    <div class="subtitle" style="margin:6px 0 0 0;">
+                        Preenche os detalhes do que vais entregar. Nós combinamos a receção depois.
+                    </div>
+                </div>
+
+                <a th:href="@{/donations}" style="height:40px; display:inline-flex; align-items:center; justify-content:center; padding:10px 14px; border-radius:14px;
+                        border:1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.06); color: rgba(255,255,255,.92);
+                        text-decoration:none; white-space:nowrap;">
+                    Voltar
+                </a>
+            </div>
+
+            <form th:action="@{/donations/products}" method="post" th:object="${form}">
+                <div style="display:grid; gap:12px;">
+
+                    <!-- Card: Categoria -->
+                    <div style="border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05); border-radius:18px; padding:14px;">
+                        <label style="display:block; margin-bottom:8px; color: rgba(255,255,255,.80); font-size:13px; font-weight:700;">
+                            Categoria
+                        </label>
+
+                        <select th:field="*{category}"
+                                style="width:100%; height:42px; border-radius:14px; border:1px solid rgba(255,255,255,.14); background:rgba(8,12,24,.35); color: rgba(255,255,255,.92); padding:0 12px;">
+                            <option value="" disabled selected>Seleciona…</option>
+                            <option th:each="c : ${categories}" th:value="${c}" th:text="${c}"></option>
+                        </select>
+
+                        <div style="margin-top:8px; color: rgba(255,255,255,.55); font-size:12px;">
+                            Ex.: comida, higiene, medicamentos, acessórios.
+                        </div>
+
+                        <div th:if="${#fields.hasErrors('category')}" style="color:#fca5a5; margin-top:8px; font-size:12px;">
+                            Obrigatório.
+                        </div>
+                    </div>
+
+                    <!-- Card: Descrição -->
+                    <div style="border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05); border-radius:18px; padding:14px;">
+                        <label style="display:block; margin-bottom:8px; color: rgba(255,255,255,.80); font-size:13px; font-weight:700;">
+                            Descrição
+                        </label>
+
+                        <textarea th:field="*{description}" rows="3"
+                                  placeholder="Ex.: camas para dormir, ração seca, toalhitas, etc."
+                                  style="width:100%; border-radius:14px; border:1px solid rgba(255,255,255,.14); background:rgba(8,12,24,.35);
+                                         color: rgba(255,255,255,.92); padding:12px; resize:vertical;"></textarea>
+
+                        <div th:if="${#fields.hasErrors('description')}" style="color:#fca5a5; margin-top:8px; font-size:12px;">
+                            Obrigatório.
+                        </div>
+                    </div>
+
+                    <!-- Grid: Quantidade + Notas -->
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+                        <!-- Quantidade -->
+                        <div style="border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05); border-radius:18px; padding:14px;">
+                            <label style="display:block; margin-bottom:8px; color: rgba(255,255,255,.80); font-size:13px; font-weight:700;">
+                                Quantidade
+                            </label>
+
+                            <input th:field="*{quantity}"
+                                   placeholder="Ex.: 2 sacos / 10 unidades"
+                                   style="width:100%; height:42px; border-radius:14px; border:1px solid rgba(255,255,255,.14);
+                                          background:rgba(8,12,24,.35); color: rgba(255,255,255,.92); padding:0 12px;">
+
+                            <div th:if="${#fields.hasErrors('quantity')}" style="color:#fca5a5; margin-top:8px; font-size:12px;">
+                                Obrigatório.
+                            </div>
+                        </div>
+
+                        <!-- Notas -->
+                        <div style="border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05); border-radius:18px; padding:14px;">
+                            <label style="display:block; margin-bottom:8px; color: rgba(255,255,255,.80); font-size:13px; font-weight:700;">
+                                Notas de entrega (opcional)
+                            </label>
+
+                            <textarea th:field="*{deliveryNotes}" rows="3"
+                                      placeholder="Ex.: posso entregar à tarde / material usado mas em bom estado"
+                                      style="width:100%; border-radius:14px; border:1px solid rgba(255,255,255,.14); background:rgba(8,12,24,.35);
+                                             color: rgba(255,255,255,.92); padding:12px; resize:vertical;"></textarea>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Actions -->
+                <div style="margin-top:16px; display:flex; gap:10px; align-items:center; justify-content:center; flex-wrap:wrap;">
+                    <button class="btn" type="submit"
+                            style="padding:10px 16px; border-radius:14px; height:42px; width:min(520px, 100%);">
+                        Submeter
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </section>
+</main>
+</body>
+</html>

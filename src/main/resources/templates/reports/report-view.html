@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Pet Alerta — Detalhe</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <link rel="icon" type="image/x-icon" th:href="@{'/favicon.ico?v=' + ${#dates.createNow().time}}">
+    <link rel="shortcut icon" type="image/x-icon" th:href="@{'/favicon.ico?v=' + ${#dates.createNow().time}}">
+</head>
+<body>
+
+<main class="auth">
+    <section class="auth-card" style="grid-template-columns: 1fr; width: min(900px, 100%);">
+        <div class="panel" style="padding: 26px;">
+
+            <!-- Header -->
+            <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:16px;">
+                <div>
+                    <h2 style="margin-bottom:6px;">Detalhe do registo</h2>
+                    <div class="subtitle" style="margin:0;">
+                        Informação completa do report e fotografia associada.
+                    </div>
+                </div>
+
+                <a th:href="@{/reports}"
+                   style="display:inline-flex; align-items:center; gap:8px; padding:10px 14px; border-radius:14px; border:1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.06); color: rgba(255,255,255,.92); text-decoration:none;">
+                    Voltar
+                </a>
+            </div>
+
+            <!-- ✅ Aviso após pedido de adoção -->
+            <div th:if="${success != null}"
+                 style="margin:0 0 14px 0; padding:12px 14px; border-radius:14px;
+                        border:1px solid rgba(34,197,94,.35); background: rgba(34,197,94,.14);
+                        color: rgba(255,255,255,.92);">
+                <span th:text="${success}"></span>
+            </div>
+
+            <!-- Content grid -->
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                <!-- Left: Fields -->
+                <div style="border:1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.06); border-radius:18px; padding:16px;">
+                    <div style="display:grid; gap:10px;">
+
+                        <div style="display:flex; justify-content:space-between; gap:10px; border-bottom:1px solid rgba(255,255,255,.10); padding-bottom:10px;">
+                            <div style="color: rgba(255,255,255,.65); font-size:12px;">ID</div>
+                            <div style="color: rgba(255,255,255,.92); font-size:13px;" th:text="${report.id}"></div>
+                        </div>
+
+                        <div style="display:flex; justify-content:space-between; gap:10px; border-bottom:1px solid rgba(255,255,255,.10); padding-bottom:10px;">
+                            <div style="color: rgba(255,255,255,.65); font-size:12px;">Título</div>
+                            <div style="color: rgba(255,255,255,.92); font-size:13px; text-align:right;" th:text="${report.title}"></div>
+                        </div>
+
+                        <div style="display:flex; justify-content:space-between; gap:10px; border-bottom:1px solid rgba(255,255,255,.10); padding-bottom:10px;">
+                            <div style="color: rgba(255,255,255,.65); font-size:12px;">Espécie</div>
+                            <div style="color: rgba(255,255,255,.85); font-size:13px;" th:text="${report.species}"></div>
+                        </div>
+
+                        <div style="display:flex; justify-content:space-between; gap:10px; border-bottom:1px solid rgba(255,255,255,.10); padding-bottom:10px;">
+                            <div style="color: rgba(255,255,255,.65); font-size:12px;">Local</div>
+                            <div style="color: rgba(255,255,255,.85); font-size:13px; text-align:right;" th:text="${report.locationText}"></div>
+                        </div>
+
+                        <div style="display:flex; justify-content:space-between; gap:10px; border-bottom:1px solid rgba(255,255,255,.10); padding-bottom:10px;">
+                            <div style="color: rgba(255,255,255,.65); font-size:12px;">Status</div>
+                            <div>
+                                <span th:text="${report.status}"
+                                      style="display:inline-flex; align-items:center; padding:6px 10px; border-radius:999px; border:1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.06); color: rgba(255,255,255,.85); font-size:13px;">
+                                </span>
+                            </div>
+                        </div>
+
+                        <div style="display:flex; justify-content:space-between; gap:10px;">
+                            <div style="color: rgba(255,255,255,.65); font-size:12px;">Notas</div>
+                            <div style="color: rgba(255,255,255,.85); font-size:13px; text-align:right;" th:text="${report.notes}"></div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Right: Photo -->
+                <div style="border:1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.06); border-radius:18px; padding:16px;">
+                    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+                        <div style="color: rgba(255,255,255,.92); font-weight:700;">Foto</div>
+                        <div class="small" style="color: rgba(255,255,255,.55);">JPG/PNG/WebP</div>
+                    </div>
+
+                    <!-- ✅ Se existir photoUrl -->
+                    <div th:if="${report.photoUrl != null}">
+                        <img th:src="${report.photoUrl}"
+                             alt="Foto do animal"
+                             style="width:100%; height:auto; border-radius:16px; border:1px solid rgba(255,255,255,.14); display:block;">
+                    </div>
+
+                    <!-- ✅ Se não existir -->
+                    <div th:if="${report.photoUrl == null}">
+                        <div class="alert alert-warning" style="margin:0;">
+                            <span class="dot"></span>
+                            <div>Sem foto associada.</div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </section>
+</main>
+
+</body>
+</html>

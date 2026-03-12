@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Admin — Doação</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <link rel="icon" type="image/x-icon" th:href="@{'/favicon.ico?v=' + ${#dates.createNow().time}}">
+    <link rel="shortcut icon" type="image/x-icon" th:href="@{'/favicon.ico?v=' + ${#dates.createNow().time}}">
+</head>
+<body>
+<main class="auth">
+    <section class="auth-card" style="grid-template-columns: 1fr; width:min(900px, 100%);">
+        <div class="panel" style="padding:26px;">
+
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px;">
+                <div>
+                    <h2 style="margin:0;">Doação #<span th:text="${d.id}"></span></h2>
+                    <div class="subtitle" style="margin:6px 0 0 0;">
+                        Tipo: <strong th:text="${d.type}"></strong> · Estado: <strong th:text="${d.status}"></strong>
+                    </div>
+                </div>
+
+                <a th:href="@{/admin/donations}"
+                   style="height:40px; display:inline-flex; align-items:center; justify-content:center; padding:10px 14px; border-radius:14px;
+                          border:1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.06); color: rgba(255,255,255,.92);
+                          text-decoration:none; white-space:nowrap;">
+                    Voltar
+                </a>
+            </div>
+
+            <!-- BLOCO PRODUTOS -->
+            <div th:if="${d.type.name() == 'PRODUTOS'}"
+                 style="border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05); border-radius:18px; padding:14px; margin-bottom:14px;">
+                <div style="display:grid; gap:8px;">
+                    <div><span style="color:rgba(255,255,255,.65);">Categoria:</span> <strong th:text="${d.productCategory}"></strong></div>
+                    <div><span style="color:rgba(255,255,255,.65);">Quantidade:</span> <strong th:text="${d.quantity}"></strong></div>
+                    <div><span style="color:rgba(255,255,255,.65);">Descrição:</span> <span th:text="${d.productDescription}"></span></div>
+                    <div th:if="${d.deliveryNotes != null && !d.deliveryNotes.isBlank()}">
+                        <span style="color:rgba(255,255,255,.65);">Notas entrega:</span> <span th:text="${d.deliveryNotes}"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BLOCO DINHEIRO -->
+            <div th:if="${d.type.name() == 'DINHEIRO'}"
+                 style="border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05); border-radius:18px; padding:14px; margin-bottom:14px;">
+                <div style="display:grid; gap:8px;">
+                    <div><span style="color:rgba(255,255,255,.65);">Montante:</span> <strong th:text="${d.amount + ' ' + d.currency}"></strong></div>
+                    <div><span style="color:rgba(255,255,255,.65);">PayPal OrderId:</span> <span th:text="${d.paypalOrderId}"></span></div>
+                    <div th:if="${d.paypalCaptureId != null}">
+                        <span style="color:rgba(255,255,255,.65);">PayPal CaptureId:</span> <span th:text="${d.paypalCaptureId}"></span>
+                    </div>
+                </div>
+
+                <div style="margin-top:10px; color:rgba(255,255,255,.55); font-size:12px;">
+                    Pagamentos: o estado é controlado pelo fluxo PayPal (não “forçar” manualmente aqui).
+                </div>
+            </div>
+
+            <!-- FORM: só faz sentido para PRODUTOS -->
+            <div th:if="${d.type.name() == 'PRODUTOS'}">
+                <form th:action="@{/admin/donations/{id}/products/update(id=${d.id})}" method="post" th:object="${form}">
+                    <div style="border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05); border-radius:18px; padding:14px;">
+                        <div style="display:grid; gap:12px;">
+                            <div>
+                                <label style="display:block; margin-bottom:6px; color: rgba(255,255,255,.70); font-size:12px;">Estado</label>
+                                <select th:field="*{status}" style="width:100%; height:40px; border-radius:14px;">
+                                    <option th:each="s : ${productStatuses}" th:value="${s}" th:text="${s}"></option>
+                                </select>
+                                <div th:if="${#fields.hasErrors('status')}" style="color:#fca5a5; margin-top:6px; font-size:12px;">
+                                    Estado obrigatório.
+                                </div>
+                            </div>
+
+                            <div>
+                                <label style="display:block; margin-bottom:6px; color: rgba(255,255,255,.70); font-size:12px;">Notas do Admin</label>
+                                <textarea th:field="*{adminNotes}" rows="3" style="width:100%; border-radius:14px;"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top:14px; display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap;">
+                        <button class="btn" type="submit"
+                                style="width:auto; height:40px; padding:10px 14px; border-radius:14px; white-space:nowrap;">
+                            Guardar
+                        </button>
+                        <a th:href="@{/admin/donations}"
+                           style="height:40px; display:inline-flex; align-items:center; justify-content:center; padding:10px 14px; border-radius:14px;
+                                  border:1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.06); color: rgba(255,255,255,.92);
+                                  text-decoration:none; white-space:nowrap;">
+                            Voltar
+                        </a>
+                    </div>
+                </form>
+            </div>
+
+        </div>
+    </section>
+</main>
+</body>
+</html>

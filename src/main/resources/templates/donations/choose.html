@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Doações — Pet Alerta</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <link rel="icon" type="image/x-icon" th:href="@{'/favicon.ico?v=' + ${#dates.createNow().time}}">
+    <link rel="shortcut icon" type="image/x-icon" th:href="@{'/favicon.ico?v=' + ${#dates.createNow().time}}">
+</head>
+<body>
+<main class="auth">
+    <section class="auth-card" style="grid-template-columns: 1fr; width:min(780px, 100%);">
+        <div class="panel" style="padding:26px;">
+
+            <!-- Header: título à esquerda, voltar à direita -->
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin:0 0 10px 0;">
+                <h2 style="margin:0;">Doações</h2>
+
+                <a th:href="@{/reports}" style="height:40px; display:inline-flex; align-items:center; justify-content:center; padding:10px 14px; border-radius:14px;
+                      border:1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.06); color: rgba(255,255,255,.92); text-decoration:none; white-space:nowrap;">
+                    Voltar
+                </a>
+            </div>
+
+            <div class="subtitle" style="margin:0 0 16px 0;">Escolhe o tipo de doação.</div>
+
+            <form th:action="@{/donations}" method="post" th:object="${form}">
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+
+                    <label style="flex:1; min-width:240px; border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.06); padding:14px; border-radius:16px; cursor:pointer;">
+                        <input type="radio"
+                               th:field="*{type}"
+                               th:value="${T(pt.luis.projectaboutanimals.model.DonationType).PRODUTOS}"
+                               style="margin-right:10px;">
+                        <strong>Produtos</strong>
+                        <div style="color:rgba(255,255,255,.65); margin-top:6px;">Comida, higiene, medicamentos, acessórios.</div>
+                    </label>
+
+                    <label style="flex:1; min-width:240px; border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.06); padding:14px; border-radius:16px; cursor:pointer;">
+                        <input type="radio"
+                               th:field="*{type}"
+                               th:value="${T(pt.luis.projectaboutanimals.model.DonationType).DINHEIRO}"
+                               style="margin-right:10px;">
+                        <strong>Dinheiro</strong>
+                        <div style="color:rgba(255,255,255,.65); margin-top:6px;">Pagamento via PayPal.</div>
+                    </label>
+
+                </div>
+
+                <div th:if="${#fields.hasErrors('type')}" style="margin-top:10px; color:#fca5a5;">
+                    Seleciona um tipo.
+                </div>
+
+                <div style="margin-top:16px; display:flex; gap:10px;">
+                    <button class="btn" type="submit" style="padding:10px 14px; border-radius:14px; height:40px;">Continuar</button>
+                    <a th:href="@{/donations/history}" style="height:40px; display:inline-flex; align-items:center; justify-content:center; padding:10px 14px; border-radius:14px;
+                      border:1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.06); color: rgba(255,255,255,.92); text-decoration:none;">
+                        Histórico
+                    </a>
+                </div>
+            </form>
+
+        </div>
+    </section>
+</main>
+</body>
+</html>

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Admin — Doações</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <link rel="icon" type="image/x-icon" th:href="@{'/favicon.ico?v=' + ${#dates.createNow().time}}">
+    <link rel="shortcut icon" type="image/x-icon" th:href="@{'/favicon.ico?v=' + ${#dates.createNow().time}}">
+</head>
+<body>
+<main class="auth">
+    <section class="auth-card" style="grid-template-columns: 1fr; width:min(1200px, 100%);">
+        <div class="panel" style="padding:26px;">
+
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px;">
+                <div>
+                    <h2 style="margin:0;">Admin — Doações</h2>
+                    <div class="subtitle" style="margin:6px 0 0 0;">Gerir doações de produtos e consultar pagamentos.</div>
+                </div>
+                <a th:href="@{/reports}"
+                   style="height:40px; display:inline-flex; align-items:center; justify-content:center; padding:10px 14px; border-radius:14px;
+                          border:1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.06); color: rgba(255,255,255,.92);
+                          text-decoration:none; white-space:nowrap;">
+                    Voltar
+                </a>
+            </div>
+
+            <!-- Filtros -->
+            <form method="get" th:action="@{/admin/donations}"
+                  style="display:flex; gap:10px; flex-wrap:wrap; align-items:end; margin-bottom:14px;
+                         border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05); border-radius:18px; padding:14px;">
+                <div style="flex:1; min-width:220px;">
+                    <label style="display:block; margin-bottom:6px; color: rgba(255,255,255,.70); font-size:12px;">Tipo</label>
+                    <select name="type" style="width:100%; height:40px; border-radius:14px;">
+                        <option value="" th:selected="${selectedType == null}">Todos</option>
+                        <option th:each="t : ${types}" th:value="${t}" th:text="${t}"
+                                th:selected="${selectedType != null and selectedType.name() == t.name()}"></option>
+                    </select>
+                </div>
+
+                <div style="flex:1; min-width:220px;">
+                    <label style="display:block; margin-bottom:6px; color: rgba(255,255,255,.70); font-size:12px;">Estado</label>
+                    <select name="status" style="width:100%; height:40px; border-radius:14px;">
+                        <option value="" th:selected="${selectedStatus == null}">Todos</option>
+                        <option th:each="s : ${statuses}" th:value="${s}" th:text="${s}"
+                                th:selected="${selectedStatus != null and selectedStatus.name() == s.name()}"></option>
+                    </select>
+                </div>
+
+                <button class="btn" type="submit"
+                        style="width:auto; height:40px; padding:10px 14px; border-radius:14px; white-space:nowrap;">
+                    Filtrar
+                </button>
+
+                <a th:href="@{/admin/donations}"
+                   style="height:40px; display:inline-flex; align-items:center; justify-content:center; padding:10px 14px; border-radius:14px;
+                          border:1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.06); color: rgba(255,255,255,.92);
+                          text-decoration:none; white-space:nowrap;">
+                    Limpar
+                </a>
+            </form>
+
+            <!-- Tabela -->
+            <div style="border:1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.06); border-radius:18px; overflow:hidden;">
+                <div style="overflow:auto;">
+                    <table style="width:100%; border-collapse: collapse; min-width: 980px;">
+                        <thead>
+                        <tr style="background: rgba(255,255,255,.06);">
+                            <th style="text-align:left; padding:14px; font-size:12px; color: rgba(255,255,255,.70); border-bottom:1px solid rgba(255,255,255,.12);">ID</th>
+                            <th style="text-align:left; padding:14px; font-size:12px; color: rgba(255,255,255,.70); border-bottom:1px solid rgba(255,255,255,.12);">Tipo</th>
+                            <th style="text-align:left; padding:14px; font-size:12px; color: rgba(255,255,255,.70); border-bottom:1px solid rgba(255,255,255,.12);">Detalhes</th>
+                            <th style="text-align:left; padding:14px; font-size:12px; color: rgba(255,255,255,.70); border-bottom:1px solid rgba(255,255,255,.12);">Estado</th>
+                            <th style="text-align:left; padding:14px; font-size:12px; color: rgba(255,255,255,.70); border-bottom:1px solid rgba(255,255,255,.12);">Ações</th>
+                        </tr>
+                        </thead>
+
+                        <tbody>
+                        <tr th:each="d : ${items}" style="border-bottom:1px solid rgba(255,255,255,.10);">
+                            <td style="padding:14px;" th:text="${d.id}"></td>
+                            <td style="padding:14px;" th:text="${d.type}"></td>
+
+                            <td style="padding:14px; color: rgba(255,255,255,.85);">
+                                <span th:if="${d.type.name() == 'PRODUTOS'}"
+                                      th:text="${d.productCategory + ' — ' + d.quantity}"></span>
+                                <span th:if="${d.type.name() == 'DINHEIRO'}"
+                                      th:text="${d.amount + ' ' + d.currency}"></span>
+                            </td>
+
+                            <td style="padding:14px;" th:text="${d.status}"></td>
+
+                            <td style="padding:14px;">
+                                <a th:href="@{/admin/donations/{id}(id=${d.id})}"
+                                   style="height:34px; display:inline-flex; align-items:center; justify-content:center; padding:0 12px; border-radius:12px;
+                                          border:1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.06); color: rgba(255,255,255,.92);
+                                          text-decoration:none; white-space:nowrap;">
+                                    Abrir
+                                </a>
+                            </td>
+                        </tr>
+
+                        <tr th:if="${#lists.isEmpty(items)}">
+                            <td colspan="5" style="padding:18px; color: rgba(255,255,255,.70);">
+                                Não existem doações para os filtros selecionados.
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </section>
+</main>
+</body>
+</html>
