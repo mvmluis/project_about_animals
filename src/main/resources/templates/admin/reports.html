@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Pet Alerta — Admin</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <link rel="icon" type="image/x-icon" th:href="@{'/favicon.ico?v=' + ${#dates.createNow().time}}">
+    <link rel="shortcut icon" type="image/x-icon" th:href="@{'/favicon.ico?v=' + ${#dates.createNow().time}}">
+
+    <!-- CSRF -->
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
+
+    <style>
+        .threadRow--active{
+            background: rgba(59,130,246,.12);
+            outline: 1px solid rgba(59,130,246,.22);
+        }
+    </style>
+</head>
+<body>
+
+<main class="auth">
+    <section class="auth-card" style="grid-template-columns: 1fr; width: min(1100px, 100%);">
+        <div class="panel" style="padding: 26px;">
+
+            <!-- Header -->
+            <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:16px;">
+                <div>
+                    <h2 style="margin-bottom:6px;">Admin — Gestão</h2>
+                    <div class="subtitle" style="margin:0;">
+                        Inbox de chats + gestão de reports e pedidos de adoção.
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                    <!-- ✅ Voltar alinhado com Opção 1 -->
+                    <a th:href="@{/admin/chats}"
+                       style="height:40px; display:inline-flex; align-items:center; justify-content:center; gap:8px;
+                              padding:10px 14px; border-radius:14px; border:1px solid rgba(255,255,255,.16);
+                              background: rgba(255,255,255,.06); color: rgba(255,255,255,.92);
+                              text-decoration:none; white-space:nowrap;">
+                        Voltar
+                    </a>
+
+                    <form th:action="@{/logout}" method="post" style="margin:0;">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                        <button type="submit"
+                                style="height:40px; display:inline-flex; align-items:center; justify-content:center; gap:8px;
+                                       padding:10px 14px; border-radius:14px; border:1px solid rgba(255,255,255,.16);
+                                       background: rgba(255,255,255,.06); color: rgba(255,255,255,.92);
+                                       font-weight:700; cursor:pointer; white-space:nowrap;">
+                            Logout
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Flash messages -->
+            <div th:if="${success != null}" class="alert alert-success" style="margin:0 0 12px 0;">
+                <span class="dot"></span>
+                <div th:text="${success}"></div>
+            </div>
+            <div th:if="${error != null}" class="alert alert-danger" style="margin:0 0 12px 0;">
+                <span class="dot"></span>
+                <div th:text="${error}"></div>
+            </div>
+
+            <!-- ===================== CHATS (ADMIN INBOX) ===================== -->
+            <div style="margin-bottom:18px;">
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin: 10px 0 10px 0;">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <h3 style="margin:0; font-size:14px; color: rgba(255,255,255,.92);">
+                            Chats
+                            <span id="adminChatBadge"
+                                  style="display:none; margin-left:8px; vertical-align:middle;
+                                         height:20px; min-width:20px; padding:0 6px; border-radius:999px;
+                                         border:1px solid rgba(239,68,68,.35); background: rgba(239,68,68,.18);
+                                         color: rgba(255,255,255,.95); font-size:12px; font-weight:900;
+                                         align-items:center; justify-content:center;">
+                            </span>
+                        </h3>
+
+                        <span id="notifyState" style="font-size:12px; color: rgba(255,255,255,.55);">
+                            A carregar notificações…
+                        </span>
+                    </div>
+
+                    <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                        <button type="button" id="enableSoundBtn"
+                                style="height:36px; padding:0 12px; border-radius:12px;
+                                       border:1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.06);
+                                       color: rgba(255,255,255,.92); font-weight:800; cursor:pointer;">
+                            🔔 Ativar som
+                        </button>
+
+                        <div style="display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:14px;
+                                    border:1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.06);">
+                            <span style="opacity:.85;">🔎</span>
+                            <input id="chatSearch" type="text" placeholder="Pesquisar por nome/email…"
+                                   oninput="filterThreads()"
+                                   style="width:240px; max-width: 60vw; border:none; outline:none; background:transparent; color: rgba(255,255,255,.92);">
+                        </div>
+                    </div>
+                </div>
+
+                <div style="border:1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.06); border-radius:18px; overflow:hidden;">
+                    <div style="display:grid; grid-template-columns: 360px 1fr; min-height: 440px;">
+
+                        <!-- LEFT: threads -->
+                        <div style="border-right:1px solid rgba(255,255,255,.10);">
+                            <div style="padding:12px 12px; border-bottom:1px solid rgba(255,255,255,.10); background: rgba(255,255,255,.03);">
+                                <div style="font-weight:800; color: rgba(255,255,255,.92); font-size:13px;">Conversas</div>
+                                <div style="font-size:12px; color: rgba(255,255,255,.55); margin-top:4px;">
+                                    Clique numa conversa para abrir.
+                                </div>
+                            </div>
+
+                            <div id="threadList" style="max-height: 390px; overflow:auto;">
+                                <!-- ✅ ALINHADO COM OPÇÃO 1 -->
+                                <a th:each="t : ${chatThreads}"
+                                   th:href="@{/admin/chats(chatId=${t.id})}"
+                                   class="threadRow"
+                                   th:classappend="${activeChatId != null and t.id == activeChatId} ? ' threadRow--active' : ''"
+                                   th:attr="data-chat-id=${t.id},
+                                   data-q=${(t.userName != null ? t.userName : '') + ' ' + (t.userEmail != null ? t.userEmail : '')}"
+                                   style="display:flex; gap:10px; padding:12px; text-decoration:none;
+                                   border-bottom:1px solid rgba(255,255,255,.08); color: rgba(255,255,255,.92);">
+
+                                <div style="width:42px; height:42px; border-radius:14px; display:flex; align-items:center; justify-content:center;
+                                                border:1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.06); flex:0 0 auto; position:relative;">
+                                    💬
+
+                                    <span th:if="${t.unreadCount != null and t.unreadCount > 0}"
+                                          style="position:absolute; top:-2px; right:-2px;
+                                                     width:12px; height:12px; border-radius:999px;
+                                                     background: rgba(239,68,68,1);
+                                                     box-shadow: 0 0 0 3px rgba(239,68,68,.18);">
+                                        </span>
+                                </div>
+
+                                <div style="min-width:0; flex:1;">
+                                    <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+                                        <div style="font-weight:900; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
+                                             th:text="${t.userName != null ? t.userName : 'Utilizador'}"></div>
+
+                                        <span th:if="${t.unreadCount != null and t.unreadCount > 0}"
+                                              th:text="${t.unreadCount}"
+                                              style="display:inline-flex; align-items:center; justify-content:center; height:22px; min-width:22px; padding:0 7px;
+                                                         border-radius:999px; border:1px solid rgba(239,68,68,.35); background: rgba(239,68,68,.12);
+                                                         color: rgba(255,255,255,.92); font-size:12px; font-weight:900;">
+                                            </span>
+                                    </div>
+
+                                    <div style="font-size:12px; color: rgba(255,255,255,.55); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:3px;"
+                                         th:text="${t.userEmail}"></div>
+
+                                    <div style="font-size:12px; color: rgba(255,255,255,.70); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:6px;"
+                                         th:text="${t.lastText != null ? t.lastText : '—'}"></div>
+
+                                    <div style="font-size:11px; color: rgba(255,255,255,.45); margin-top:6px;"
+                                         th:text="${t.lastAt != null ? t.lastAt : ''}"></div>
+                                </div>
+                                </a>
+
+                                <div th:if="${chatThreads == null or #lists.isEmpty(chatThreads)}" style="padding:14px;">
+                                    <div class="alert alert-warning" style="margin:0;">
+                                        <span class="dot"></span>
+                                        <div>Sem conversas ainda.</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- RIGHT: active chat window -->
+                        <div style="display:flex; flex-direction:column; min-width:0;">
+
+                            <div style="padding:12px; border-bottom:1px solid rgba(255,255,255,.10); background: rgba(255,255,255,.03);">
+                                <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+                                    <div style="display:flex; align-items:center; gap:10px; min-width:0;">
+                                        <div style="width:40px; height:40px; border-radius:14px; display:flex; align-items:center; justify-content:center;
+                                                    border:1px solid rgba(59,130,246,.30); background: rgba(59,130,246,.12);">
+                                            👤
+                                        </div>
+
+                                        <div style="min-width:0;">
+                                            <div style="font-weight:900; color: rgba(255,255,255,.92); font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
+                                                 th:text="${activeChatUserName != null ? activeChatUserName : 'Seleciona uma conversa'}"></div>
+                                            <div style="font-size:12px; color: rgba(255,255,255,.55); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
+                                                 th:text="${activeChatUserEmail != null ? activeChatUserEmail : ''}"></div>
+                                        </div>
+                                    </div>
+
+                                    <span style="font-size:12px; color: rgba(255,255,255,.50);">
+                                        Chat admin
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div id="adminChatMessages"
+                                 style="flex:1; overflow:auto; padding:12px; display:flex; flex-direction:column; gap:10px;">
+                                <div th:if="${chatMessages == null or #lists.isEmpty(chatMessages)}"
+                                     style="padding:10px; color: rgba(255,255,255,.55); font-size:13px;">
+                                    Seleciona uma conversa para ver as mensagens.
+                                </div>
+
+                                <div th:each="m : ${chatMessages}"
+                                     th:with="isAdmin=${m.fromRole != null and m.fromRole.toString() == 'ADMIN'}"
+                                     th:style="${isAdmin}
+                                        ? 'max-width: 86%; align-self:flex-end; padding:10px 12px; border-radius:14px; border:1px solid rgba(59,130,246,.30); background: rgba(59,130,246,.12); color: rgba(255,255,255,.95); font-size:13px;'
+                                        : 'max-width: 86%; align-self:flex-start; padding:10px 12px; border-radius:14px; border:1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.06); color: rgba(255,255,255,.92); font-size:13px;'">
+
+                                    <div th:text="${m.text}"></div>
+
+                                    <a th:if="${m.attachmentUrl != null}"
+                                       th:href="${m.attachmentUrl}"
+                                       style="margin-top:8px; display:inline-flex; gap:8px; align-items:center;
+                                              padding:8px 10px; border-radius:12px; border:1px solid rgba(255,255,255,.14);
+                                              background: rgba(255,255,255,.04); color: rgba(255,255,255,.92); text-decoration:none; font-size:12px;">
+                                        📎 <span th:text="${m.attachmentName != null ? m.attachmentName : 'Anexo'}"></span>
+                                    </a>
+
+                                    <div style="margin-top:8px; font-size:11px; color: rgba(255,255,255,.55);"
+                                         th:text="${m.createdAt != null ? m.createdAt : ''}"></div>
+                                </div>
+                            </div>
+
+                            <div style="padding:12px; border-top:1px solid rgba(255,255,255,.10); background: rgba(255,255,255,.03);">
+
+                                <!-- FORM REAL (só quando há chat ativo) -->
+                                <form th:if="${activeChatId != null}"
+                                      th:action="@{/admin/chats/{id}/messages(id=${activeChatId})}"
+                                      method="post"
+                                      enctype="multipart/form-data"
+                                      style="margin:0; display:flex; flex-direction:column; gap:8px;">
+
+                                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+
+                                    <div style="display:flex; gap:8px; align-items:center;">
+                                        <input type="text" name="text" placeholder="Escreve uma resposta…"
+                                               style="flex:1; height:40px; border-radius:14px; border:1px solid rgba(255,255,255,.16);
+                                                      background: rgba(255,255,255,.06); color: rgba(255,255,255,.92); padding:0 12px; outline:none;">
+
+                                        <label style="height:40px; display:inline-flex; align-items:center; justify-content:center; padding:0 12px; border-radius:14px;
+                                                      border:1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.06);
+                                                      color: rgba(255,255,255,.92); cursor:pointer; white-space:nowrap;">
+                                            📎
+                                            <input id="fileInput" type="file" name="file" style="display:none;">
+                                        </label>
+
+                                        <button type="submit"
+                                                style="height:40px; padding:0 14px; border-radius:14px; border:1px solid rgba(34,197,94,.35);
+                                                       background: rgba(34,197,94,.14); color: rgba(255,255,255,.95); font-weight:900; cursor:pointer;">
+                                            Enviar
+                                        </button>
+                                    </div>
+
+                                    <!-- Preview do ficheiro selecionado -->
+                                    <div id="filePreview"
+                                         style="display:none; align-items:center; justify-content:space-between; gap:10px;
+                                                padding:10px 12px; border-radius:14px; border:1px solid rgba(255,255,255,.14);
+                                                background: rgba(255,255,255,.04);">
+                                        <div style="min-width:0;">
+                                            <div style="font-size:12px; color: rgba(255,255,255,.90); font-weight:900;">
+                                                Ficheiro selecionado
+                                            </div>
+                                            <div id="filePreviewName"
+                                                 style="font-size:12px; color: rgba(255,255,255,.70); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"></div>
+                                        </div>
+
+                                        <button type="button" id="clearFileBtn"
+                                                style="height:32px; padding:0 10px; border-radius:12px;
+                                                       border:1px solid rgba(239,68,68,.35); background: rgba(239,68,68,.12);
+                                                       color: rgba(255,255,255,.95); font-weight:900; cursor:pointer;">
+                                            Limpar
+                                        </button>
+                                    </div>
+                                </form>
+
+                                <!-- FORM “fake” (quando não há chat ativo, evita submits/erros) -->
+                                <form th:if="${activeChatId == null}"
+                                      action="#"
+                                      method="post"
+                                      onsubmit="return false;"
+                                      style="margin:0; display:flex; flex-direction:column; gap:8px; opacity:.65;">
+
+                                    <div style="display:flex; gap:8px; align-items:center;">
+                                        <input type="text" placeholder="Seleciona uma conversa para responder…"
+                                               disabled
+                                               style="flex:1; height:40px; border-radius:14px; border:1px solid rgba(255,255,255,.16);
+                                                      background: rgba(255,255,255,.06); color: rgba(255,255,255,.92); padding:0 12px; outline:none;">
+
+                                        <label style="height:40px; display:inline-flex; align-items:center; justify-content:center; padding:0 12px; border-radius:14px;
+                                                      border:1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.06);
+                                                      color: rgba(255,255,255,.92); cursor:not-allowed; white-space:nowrap;">
+                                            📎
+                                            <input type="file" style="display:none;" disabled>
+                                        </label>
+
+                                        <button type="button" disabled
+                                                style="height:40px; padding:0 14px; border-radius:14px; border:1px solid rgba(34,197,94,.35);
+                                                       background: rgba(34,197,94,.14); color: rgba(255,255,255,.95); font-weight:900; cursor:not-allowed;">
+                                            Enviar
+                                        </button>
+                                    </div>
+                                </form>
+
+                                <div style="margin-top:8px; font-size:12px; color: rgba(255,255,255,.55);">
+                                    Notificações: badge + título (polling). Som só após clique em “Ativar som”.
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- ======================================================= -->
+
+            <!-- ===================== REPORTS (ADMIN) ===================== -->
+            <div style="margin-top:10px; margin-bottom:18px;">
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin: 10px 0;">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <h3 style="margin:0; font-size:14px; color: rgba(255,255,255,.92);">
+                            Reports
+                        </h3>
+                        <span style="font-size:12px; color: rgba(255,255,255,.55);">
+                            Pendentes / gestão
+                        </span>
+                    </div>
+
+                    <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                        <div style="display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:14px;
+                                    border:1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.06);">
+                            <span style="opacity:.85;">🔎</span>
+                            <input id="reportSearch" type="text" placeholder="Pesquisar por título/espécie/local…"
+                                   oninput="filterReports()"
+                                   style="width:280px; max-width: 70vw; border:none; outline:none; background:transparent; color: rgba(255,255,255,.92);">
+                        </div>
+                    </div>
+                </div>
+
+                <div style="border:1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.06); border-radius:18px; overflow:hidden;">
+                    <div style="overflow:auto;">
+                        <table style="width:100%; border-collapse: collapse; min-width: 980px;">
+                            <thead>
+                            <tr style="background: rgba(255,255,255,.06);">
+                                <th style="text-align:left; padding:14px 14px; font-size:12px; color: rgba(255,255,255,.70); border-bottom:1px solid rgba(255,255,255,.12); white-space:nowrap;">ID</th>
+                                <th style="text-align:left; padding:14px 14px; font-size:12px; color: rgba(255,255,255,.70); border-bottom:1px solid rgba(255,255,255,.12); white-space:nowrap;">Título</th>
+                                <th style="text-align:left; padding:14px 14px; font-size:12px; color: rgba(255,255,255,.70); border-bottom:1px solid rgba(255,255,255,.12); white-space:nowrap;">Espécie</th>
+                                <th style="text-align:left; padding:14px 14px; font-size:12px; color: rgba(255,255,255,.70); border-bottom:1px solid rgba(255,255,255,.12); white-space:nowrap;">Local</th>
+                                <th style="text-align:left; padding:14px 14px; font-size:12px; color: rgba(255,255,255,.70); border-bottom:1px solid rgba(255,255,255,.12); white-space:nowrap;">Estado</th>
+                                <th style="text-align:left; padding:14px 14px; font-size:12px; color: rgba(255,255,255,.70); border-bottom:1px solid rgba(255,255,255,.12); white-space:nowrap;">Ações</th>
+                            </tr>
+                            </thead>
+
+                            <tbody id="reportRows">
+                            <tr th:each="r : ${items}"
+                                class="reportRow"
+                                th:attr="data-q=${(r.title != null ? r.title : '') + ' ' + (r.species != null ? r.species : '') + ' ' + (r.locationText != null ? r.locationText : '')}"
+                                style="border-bottom:1px solid rgba(255,255,255,.10);"
+                                onmouseover="this.style.background='rgba(255,255,255,.04)'"
+                                onmouseout="this.style.background='transparent'">
+
+                                <td style="padding:14px; color: rgba(255,255,255,.85); font-size:13px;" th:text="${r.id}"></td>
+
+                                <td style="padding:14px; font-size:13px; min-width: 280px;">
+                                    <a th:href="@{/admin/reports/{id}(id=${r.id})}"
+                                       style="color: rgba(255,255,255,.92); text-decoration:none; font-weight:800;"
+                                       th:text="${r.title}"></a>
+                                </td>
+
+                                <td style="padding:14px; color: rgba(255,255,255,.80); font-size:13px; white-space:nowrap;"
+                                    th:text="${r.species}"></td>
+
+                                <!-- Local com ícone -->
+                                <td style="padding:14px; color: rgba(255,255,255,.80); font-size:13px; max-width: 360px;">
+                                    <span style="display:flex; align-items:center; gap:8px; min-width:0;">
+                                        <span style="opacity:.85;">📍</span>
+                                        <span th:text="${r.locationText}"
+                                              th:attr="title=${r.locationText}"
+                                              style="display:block; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"></span>
+                                    </span>
+                                </td>
+
+                                <!-- Estado com contorno verde -->
+                                <td style="padding:14px; font-size:13px; white-space:nowrap;">
+                                    <span style="display:inline-flex; align-items:center; justify-content:center; height:28px; padding:0 10px; border-radius:999px;
+                                                 border:1px solid rgba(34,197,94,.40); background: rgba(34,197,94,.10); color: rgba(255,255,255,.88);">
+                                        <span th:text="${r.status != null ? r.status.name() : '—'}"></span>
+                                    </span>
+                                </td>
+
+                                <!-- Botão Ver igual ao de Adoption -->
+                                <td style="padding:14px; white-space:nowrap;">
+                                    <a th:href="@{/admin/reports/{id}(id=${r.id})}"
+                                       style="display:inline-flex; align-items:center; gap:8px; font-size: 13px; padding:8px 12px; border-radius:12px;
+                                              border:1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.06);
+                                              color: rgba(255,255,255,.92); text-decoration:none;">
+                                        Ver
+                                    </a>
+                                </td>
+                            </tr>
+
+                            <tr th:if="${items == null or #lists.isEmpty(items)}">
+                                <td colspan="6" style="padding:18px;">
+                                    <div class="alert alert-warning" style="margin:0;">
+                                        <span class="dot"></span>
+                                        <div>Sem reports para mostrar.</div>
+                                    </div>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <!-- ======================================================= -->
+
+            <!-- ===================== PEDIDOS DE ADOÇÃO ===================== -->
+            <div style="margin-top:10px;">
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin: 10px 0;">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <h3 style="margin:0 0 10px 0; font-size:14px; color: rgba(255,255,255,.92);">Pedidos de adoção</h3>
+                    </div>
+
+                    <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                        <div style="display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:14px;
+                                    border:1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.06);">
+                            <span style="opacity:.85;">🔎</span>
+                            <input id="adoptionSearch" type="text" placeholder="Pesquisar por nome/email/report…"
+                                   oninput="filterAdoptions()"
+                                   style="width:280px; max-width: 70vw; border:none; outline:none; background:transparent; color: rgba(255,255,255,.92);">
+                        </div>
+                    </div>
+                </div>
+
+                <div style="border:1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.06); border-radius:18px; overflow:hidden;">
+                    <div style="overflow:auto;">
+                        <table style="width:100%; border-collapse: collapse; min-width: 980px;">
+                            <thead>
+                            <tr style="background: rgba(255,255,255,.06);">
+                                <th style="text-align:left; padding:14px; font-size:12px; color: rgba(255,255,255,.70); border-bottom:1px solid rgba(255,255,255,.12); white-space:nowrap;">ID</th>
+                                <th style="text-align:left; padding:14px; font-size:12px; color: rgba(255,255,255,.70); border-bottom:1px solid rgba(255,255,255,.12); white-space:nowrap;">Report</th>
+                                <th style="text-align:left; padding:14px; font-size:12px; color: rgba(255,255,255,.70); border-bottom:1px solid rgba(255,255,255,.12); white-space:nowrap;">Candidato</th>
+                                <th style="text-align:left; padding:14px; font-size:12px; color: rgba(255,255,255,.70); border-bottom:1px solid rgba(255,255,255,.12); white-space:nowrap;">Contacto</th>
+                                <th style="text-align:left; padding:14px; font-size:12px; color: rgba(255,255,255,.70); border-bottom:1px solid rgba(255,255,255,.12); white-space:nowrap;">Estado</th>
+                                <th style="text-align:left; padding:14px; font-size:12px; color: rgba(255,255,255,.70); border-bottom:1px solid rgba(255,255,255,.12); white-space:nowrap;">Mensagem</th>
+                                <th style="text-align:left; padding:14px; font-size:12px; color: rgba(255,255,255,.70); border-bottom:1px solid rgba(255,255,255,.12); white-space:nowrap;">Abrir</th>
+                            </tr>
+                            </thead>
+
+                            <tbody id="adoptionRows">
+                            <tr th:each="a : ${adoptionItems}"
+                                class="adoptionRow"
+                                th:attr="data-q=${(a.fullName != null ? a.fullName : '') + ' ' + (a.email != null ? a.email : '') + ' ' + (a.report != null ? a.report.title : '')}"
+                                style="border-bottom:1px solid rgba(255,255,255,.10);"
+                                onmouseover="this.style.background='rgba(255,255,255,.04)'"
+                                onmouseout="this.style.background='transparent'">
+
+                                <td style="padding:14px; color: rgba(255,255,255,.85); font-size:13px;"
+                                    th:text="${a.id}"></td>
+
+                                <td style="padding:14px; font-size:13px;">
+                                    <a th:if="${a.report != null}"
+                                       th:href="@{/admin/reports/{id}(id=${a.report.id})}"
+                                       style="color: rgba(255,255,255,.92); text-decoration:none; font-weight:700;
+                                        display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                        <span th:text="${a.report.id}"></span>
+                                        <span style="opacity:.65; margin: 0 6px;">—</span>
+                                        <span th:text="${a.report.title}"></span>
+                                    </a>
+                                    <span th:if="${a.report == null}" style="color: rgba(255,255,255,.55);">—</span>
+                                </td>
+
+                                <td style="padding:14px; color: rgba(255,255,255,.92); font-size:13px; font-weight:800;"
+                                    th:text="${a.fullName}"></td>
+
+                                <td style="padding:14px; font-size:13px;">
+                                    <div style="color: rgba(255,255,255,.92);" th:text="${a.email}"></div>
+                                    <div class="small" style="margin-top:6px; color: rgba(255,255,255,.55);" th:text="${a.phone}"></div>
+                                </td>
+
+                                <!-- Estado com contorno verde -->
+                                <td style="padding:14px; font-size:13px; white-space:nowrap;">
+                                    <span style="display:inline-flex; align-items:center; justify-content:center; height:28px; padding:0 10px; border-radius:999px;
+                                                 border:1px solid rgba(34,197,94,.40); background: rgba(34,197,94,.10); color: rgba(255,255,255,.88);">
+                                        <span th:text="${a.status != null ? a.status.name() : '—'}"></span>
+                                    </span>
+                                </td>
+
+                                <td style="padding:14px; color: rgba(255,255,255,.80); font-size:13px; max-width: 380px;">
+                                    <span th:text="${a.message}"
+                                          th:attr="title=${a.message}"
+                                          style="display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"></span>
+                                </td>
+
+                                <td style="padding:14px; font-size:13px; white-space:nowrap;">
+                                    <a th:href="@{/admin/adoptions/{id}(id=${a.id})}"
+                                       style="display:inline-flex; align-items:center; gap:8px; padding:8px 12px; border-radius:12px; border:1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.06); color: rgba(255,255,255,.92); text-decoration:none;">
+                                        Ver
+                                    </a>
+                                </td>
+                            </tr>
+
+                            <tr th:if="${adoptionItems == null or #lists.isEmpty(adoptionItems)}">
+                                <td colspan="7" style="padding:18px;">
+                                    <div class="alert alert-warning" style="margin:0;">
+                                        <span class="dot"></span>
+                                        <div>Não existem pedidos de adoção para mostrar.</div>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <!-- ======================================================= -->
+
+        </div>
+    </section>
+</main>
+
+<!-- inject seguro do activeChatId -->
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    const ACTIVE_CHAT_ID = /*[[${activeChatId}]]*/ null;
+    /*]]>*/
+</script>
+
+<script>
+    // ================= CSRF =================
+    function getCsrfHeaderName() {
+        const m = document.querySelector('meta[name="_csrf_header"]');
+        return m ? (m.getAttribute('content') || '') : '';
+    }
+    function getCsrfToken() {
+        const m = document.querySelector('meta[name="_csrf"]');
+        return m ? (m.getAttribute('content') || '') : '';
+    }
+    function buildCsrfHeaders() {
+        const hName = getCsrfHeaderName();
+        const token = getCsrfToken();
+        if (!hName || !token) return {};
+        return { [hName]: token };
+    }
+
+    // ================= Search =================
+    function filterThreads() {
+        const q = (document.getElementById('chatSearch')?.value || '').toLowerCase().trim();
+        const rows = document.querySelectorAll('.threadRow');
+        rows.forEach(r => {
+            const hay = (r.getAttribute('data-q') || '').toLowerCase();
+            r.style.display = (!q || hay.includes(q)) ? 'flex' : 'none';
+        });
+    }
+
+    function filterReports() {
+        const q = (document.getElementById('reportSearch')?.value || '').toLowerCase().trim();
+        const rows = document.querySelectorAll('.reportRow');
+        rows.forEach(r => {
+            const hay = (r.getAttribute('data-q') || '').toLowerCase();
+            r.style.display = (!q || hay.includes(q)) ? 'table-row' : 'none';
+        });
+    }
+
+    function filterAdoptions() {
+        const q = (document.getElementById('adoptionSearch')?.value || '').toLowerCase().trim();
+        const rows = document.querySelectorAll('.adoptionRow');
+        rows.forEach(r => {
+            const hay = (r.getAttribute('data-q') || '').toLowerCase();
+            r.style.display = (!q || hay.includes(q)) ? 'table-row' : 'none';
+        });
+    }
+
+    // ================= File preview =================
+    const fileInput = document.getElementById('fileInput');
+    const filePreview = document.getElementById('filePreview');
+    const filePreviewName = document.getElementById('filePreviewName');
+    const clearFileBtn = document.getElementById('clearFileBtn');
+
+    function humanSize(bytes) {
+        if (!bytes && bytes !== 0) return '';
+        const units = ['B','KB','MB','GB'];
+        let n = bytes, u = 0;
+        while (n >= 1024 && u < units.length - 1) { n /= 1024; u++; }
+        return `${n.toFixed(u === 0 ? 0 : 1)} ${units[u]}`;
+    }
+
+    function updateFilePreview() {
+        const f = fileInput && fileInput.files && fileInput.files[0] ? fileInput.files[0] : null;
+        if (!f) {
+            if (filePreview) filePreview.style.display = 'none';
+            if (filePreviewName) filePreviewName.textContent = '';
+            return;
+        }
+        if (filePreview) filePreview.style.display = 'flex';
+        if (filePreviewName) filePreviewName.textContent = `${f.name} — ${humanSize(f.size)}`;
+    }
+
+    if (fileInput) {
+        fileInput.addEventListener('change', updateFilePreview);
+        updateFilePreview();
+    }
+
+    if (clearFileBtn && fileInput) {
+        clearFileBtn.addEventListener('click', () => {
+            fileInput.value = '';
+            updateFilePreview();
+        });
+    }
+
+    // ================= Não navegar quando clicas no mesmo chat =================
+    (function preventSameThreadReload() {
+        const rows = document.querySelectorAll('.threadRow');
+        rows.forEach(a => {
+            a.addEventListener('click', (e) => {
+                const id = a.getAttribute('data-chat-id');
+                if (ACTIVE_CHAT_ID !== null && id && String(id) === String(ACTIVE_CHAT_ID)) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+            });
+        });
+    })();
+
+    // ================= Notifications: CHAT ONLY =================
+    const POLL_MS = 3000;
+    const URL_CHATS_UNREAD = '/admin/chats/unread-total';
+
+    const originalTitle = document.title;
+    let titleBlinkTimer = null;
+    let lastChats = 0;
+
+    const notifyState = document.getElementById('notifyState');
+
+    function setBadge(count) {
+        const b = document.getElementById('adminChatBadge');
+        if (!b) return;
+        if (!count || count <= 0) {
+            b.style.display = 'none';
+            b.textContent = '';
+            return;
+        }
+        b.style.display = 'inline-flex';
+        b.textContent = count > 99 ? '99+' : String(count);
+    }
+
+    function startTitleBlink(count) {
+        stopTitleBlink();
+        let on = false;
+        titleBlinkTimer = setInterval(() => {
+            on = !on;
+            document.title = on ? `(${count}) Nova mensagem — Admin` : originalTitle;
+        }, 900);
+    }
+
+    function stopTitleBlink() {
+        if (!titleBlinkTimer) return;
+        clearInterval(titleBlinkTimer);
+        titleBlinkTimer = null;
+        document.title = originalTitle;
+    }
+
+    // Som (só após gesto do utilizador)
+    let soundEnabled = false;
+    let audioCtx = null;
+
+    function beep() {
+        if (!soundEnabled) return;
+        try {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const o = audioCtx.createOscillator();
+            const g = audioCtx.createGain();
+            o.connect(g); g.connect(audioCtx.destination);
+            o.frequency.value = 880;
+            g.gain.value = 0.05;
+            o.start();
+            setTimeout(() => { o.stop(); }, 120);
+        } catch (e) {}
+    }
+
+    const enableSoundBtn = document.getElementById('enableSoundBtn');
+    if (enableSoundBtn) {
+        enableSoundBtn.addEventListener('click', async () => {
+            soundEnabled = true;
+            enableSoundBtn.textContent = '🔔 Som ativo';
+            enableSoundBtn.disabled = true;
+            try {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                await audioCtx.resume();
+            } catch (e) {}
+        });
+    }
+
+    async function fetchUnreadChatsCount() {
+        const resp = await fetch(URL_CHATS_UNREAD, {
+            method: 'GET',
+            headers: buildCsrfHeaders(),
+            credentials: 'same-origin'
+        });
+
+        const ct = (resp.headers.get('content-type') || '').toLowerCase();
+
+        if (!resp.ok) return { ok: false, reason: `HTTP ${resp.status}` };
+        if (!ct.includes('application/json')) return { ok: false, reason: 'Resposta não é JSON (provável redirect/login)' };
+
+        const data = await resp.json();
+        const count = data && typeof data.count === 'number' ? data.count : 0;
+        return { ok: true, count };
+    }
+
+    async function pollChats() {
+        try {
+            const res = await fetchUnreadChatsCount();
+            if (!res.ok) {
+                if (notifyState) notifyState.textContent = `Notificações: ${res.reason}`;
+                return;
+            }
+
+            const chats = res.count || 0;
+            setBadge(chats);
+
+            if (notifyState) notifyState.textContent = 'Notificações: ok';
+
+            if (chats > lastChats) {
+                startTitleBlink(chats);
+                if (document.hidden) beep();
+            }
+
+            lastChats = chats;
+
+            if (!document.hidden && chats === 0) stopTitleBlink();
+        } catch (e) {
+            if (notifyState) notifyState.textContent = 'Notificações: erro de rede';
+        }
+    }
+
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) stopTitleBlink();
+    });
+
+    setInterval(pollChats, POLL_MS);
+    pollChats();
+</script>
+
+</body>
+</html>

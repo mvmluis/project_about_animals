@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pet Alerta — Pedido de adoção</title>
+  <link rel="stylesheet" th:href="@{/css/styles.css}">
+  <link rel="icon" type="image/x-icon" th:href="@{'/favicon.ico?v=' + ${#dates.createNow().time}}">
+  <link rel="shortcut icon" type="image/x-icon" th:href="@{'/favicon.ico?v=' + ${#dates.createNow().time}}">
+</head>
+<body>
+
+<main class="auth">
+  <section class="auth-card" style="grid-template-columns: 1fr; width: min(820px, 100%);">
+    <div class="panel" style="padding: 26px;">
+
+      <div style="display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:14px;">
+        <div>
+          <h2 style="margin:0 0 6px 0;">Pedido de adoção</h2>
+          <div class="subtitle" style="margin:0;">
+            Report #<span th:text="${report.id}"></span> — <span th:text="${report.title}"></span>
+          </div>
+        </div>
+
+        <a th:href="@{/reports/{id}(id=${report.id})}"
+           style="height:40px; display:inline-flex; align-items:center; justify-content:center; padding:10px 14px; border-radius:14px;
+                          border:1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.06); color: rgba(255,255,255,.92); text-decoration:none;">
+          Voltar
+        </a>
+      </div>
+
+      <div th:if="${error != null}" class="alert alert-danger" style="margin:0 0 12px 0;">
+        <span class="dot"></span>
+        <div th:text="${error}"></div>
+      </div>
+
+      <div style="border:1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.06); border-radius:18px; padding:16px;">
+        <form th:action="@{/reports/{id}/adopt(id=${report.id})}" method="post" th:object="${form}" style="margin:0;">
+
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+            <div>
+              <label class="small" style="display:block; color: rgba(255,255,255,.75); margin-bottom:6px;">Nome completo</label>
+              <input type="text" th:field="*{fullName}"
+                     style="width:100%; height:42px; border-radius:14px; border:1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.06);
+                                          color: rgba(255,255,255,.92); padding:0 12px;">
+              <div th:if="${#fields.hasErrors('fullName')}" class="small" style="color: rgba(239,68,68,.95); margin-top:6px;"
+                   th:errors="*{fullName}"></div>
+            </div>
+
+            <div>
+              <label class="small" style="display:block; color: rgba(255,255,255,.75); margin-bottom:6px;">Email</label>
+              <input type="email" th:field="*{email}"
+                     style="width:100%; height:42px; border-radius:14px; border:1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.06);
+                                          color: rgba(255,255,255,.92); padding:0 12px;">
+              <div th:if="${#fields.hasErrors('email')}" class="small" style="color: rgba(239,68,68,.95); margin-top:6px;"
+                   th:errors="*{email}"></div>
+            </div>
+          </div>
+
+          <div style="margin-top:12px;">
+            <label class="small" style="display:block; color: rgba(255,255,255,.75); margin-bottom:6px;">Telefone</label>
+            <input type="text" th:field="*{phone}"
+                   style="width:100%; height:42px; border-radius:14px; border:1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.06);
+                                      color: rgba(255,255,255,.92); padding:0 12px;">
+            <div th:if="${#fields.hasErrors('phone')}" class="small" style="color: rgba(239,68,68,.95); margin-top:6px;"
+                 th:errors="*{phone}"></div>
+          </div>
+
+          <div style="margin-top:12px;">
+            <label class="small" style="display:block; color: rgba(255,255,255,.75); margin-bottom:6px;">Mensagem</label>
+            <textarea th:field="*{message}" rows="6"
+                      style="width:100%; border-radius:14px; border:1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.06);
+                                         color: rgba(255,255,255,.92); padding:10px 12px; resize:vertical;"></textarea>
+            <div th:if="${#fields.hasErrors('message')}" class="small" style="color: rgba(239,68,68,.95); margin-top:6px;"
+                 th:errors="*{message}"></div>
+          </div>
+
+          <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-top:14px;">
+            <button type="submit"
+                    style="height:42px; padding:0 14px; border-radius:14px; border:1px solid rgba(34,197,94,.35);
+                                       background: rgba(34,197,94,.12); color: rgba(255,255,255,.92); font-weight:800; cursor:pointer;">
+              Enviar pedido
+            </button>
+
+            <a th:href="@{/reports/{id}(id=${report.id})}"
+               style="height:42px; display:inline-flex; align-items:center; justify-content:center; padding:0 14px; border-radius:14px;
+                                  border:1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.06); color: rgba(255,255,255,.92); text-decoration:none;">
+              Cancelar
+            </a>
+          </div>
+
+        </form>
+      </div>
+
+    </div>
+  </section>
+</main>
+
+</body>
+</html>

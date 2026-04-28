@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pet Alerta — Processo de adoção</title>
+  <link rel="stylesheet" th:href="@{/css/styles.css}">
+  <link rel="icon" type="image/x-icon" th:href="@{'/favicon.ico?v=' + ${#dates.createNow().time}}">
+  <link rel="shortcut icon" type="image/x-icon" th:href="@{'/favicon.ico?v=' + ${#dates.createNow().time}}">
+</head>
+<body>
+
+<main class="auth">
+  <section class="auth-card" style="grid-template-columns: 1fr; width: min(980px, 100%);">
+    <div class="panel" style="padding: 26px;">
+
+      <!-- Header -->
+      <div style="display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:14px;">
+        <div>
+          <h2 style="margin:0 0 6px 0;">Processo de adoção</h2>
+          <div class="subtitle" style="margin:0;">
+            Pedido #<span th:text="${adoption.id}"></span>
+          </div>
+        </div>
+
+        <a th:href="@{/my-adoptions}"
+           style="height:40px; display:inline-flex; align-items:center; justify-content:center; padding:10px 14px; border-radius:14px;
+                  border:1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.06); color: rgba(255,255,255,.92); text-decoration:none;">
+          Voltar
+        </a>
+      </div>
+
+      <!-- Estado atual -->
+      <div style="border:1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.06); border-radius:18px; padding:16px; margin-bottom:14px;">
+        <div style="display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; align-items:center;">
+          <div style="color: rgba(255,255,255,.92); font-weight:800;">
+            Estado atual:
+            <span style="margin-left:8px; display:inline-flex; align-items:center; padding:6px 10px; border-radius:999px;
+                         border:1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.06); color: rgba(255,255,255,.92);">
+              <span th:switch="${adoption.status != null ? adoption.status.name() : ''}">
+                <span th:case="'PENDENTE'">Pendente</span>
+                <span th:case="'EM_ANALISE'">Em análise</span>
+                <span th:case="'APROVADO'">Aprovado</span>
+
+                <span th:case="'VISITA_MARCADA'">Visita marcada</span>
+                <span th:case="'VISITA_REALIZADA'">Visita realizada</span>
+
+                <span th:case="'MICROCHIP'">Identificação (microchip)</span>
+                <span th:case="'DESPARASITACAO'">Desparasitação</span>
+                <span th:case="'ESTERILIZACAO'">Esterilização</span>
+                <span th:case="'PRONTO'">Pronto</span>
+
+                <span th:case="'CONTRATO_PENDENTE'">Contrato pendente</span>
+                <span th:case="'ADOTADO'">Adotado</span>
+
+                <span th:case="'CANCELADO'">Cancelado</span>
+                <span th:case="'REJEITADO'">Rejeitado</span>
+
+                <span th:case="*" th:text="${adoption.status != null ? adoption.status.name() : '—'}"></span>
+              </span>
+            </span>
+          </div>
+
+          <a th:href="@{/reports/{id}(id=${adoption.report.id})}"
+             style="height:36px; display:inline-flex; align-items:center; justify-content:center; padding:0 12px; border-radius:12px;
+                    border:1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.06); color: rgba(255,255,255,.92); text-decoration:none;">
+            Abrir report
+          </a>
+        </div>
+
+        <div class="small" style="margin-top:10px; color: rgba(255,255,255,.70);">
+          Report: <b>#<span th:text="${adoption.report.id}"></span></b> — <span th:text="${adoption.report.title}"></span>
+        </div>
+
+        <div th:if="${adoption.visitStartAt != null}" class="small" style="margin-top:10px; color: rgba(255,255,255,.75);">
+          Visita marcada:
+          <b th:text="${#temporals.format(adoption.visitStartAt, 'dd/MM/yyyy HH:mm')}"></b>
+          <span th:if="${adoption.visitLocation != null and !#strings.isEmpty(adoption.visitLocation)}">
+            — <span th:text="${adoption.visitLocation}"></span>
+          </span>
+        </div>
+
+        <div th:if="${adoption.visitNote != null and !#strings.isEmpty(adoption.visitNote)}"
+             class="small" style="margin-top:8px; color: rgba(255,255,255,.70);">
+          Nota: <span th:text="${adoption.visitNote}"></span>
+        </div>
+      </div>
+
+      <!-- Timeline -->
+      <h3 style="margin:0 0 10px 0; font-size:14px; color: rgba(255,255,255,.92);">Atualizações</h3>
+
+      <div style="border:1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.06); border-radius:18px; overflow:hidden;">
+        <div th:if="${events == null or #lists.isEmpty(events)}" style="padding:14px;">
+          <div class="small" style="color: rgba(255,255,255,.65);">Ainda não há atualizações.</div>
+        </div>
+
+        <div th:each="e : ${events}"
+             th:with="
+               note=${e.note != null ? e.note : ''},
+               isStatus=${e.type != null and e.type.name() == 'STATUS_CHANGED'},
+               hasArrow=${isStatus and #strings.contains(note,'->')},
+               left=${hasArrow ? #strings.trim(#strings.substringBefore(note,'->')) : ''},
+               right=${hasArrow ? #strings.trim(#strings.substringAfter(note,'->')) : ''},
+               fromRaw=${hasArrow and #strings.contains(left,':') ? #strings.trim(#strings.substringAfter(left,':')) : left},
+               toRaw=${right},
+               fromKey=${#strings.trim(fromRaw)},
+               toKey=${#strings.trim(toRaw)}
+             "
+             style="padding:14px; border-bottom:1px solid rgba(255,255,255,.10);">
+
+          <!-- topo do item -->
+          <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:flex-start;">
+            <div style="display:flex; flex-direction:column; gap:6px;">
+
+              <!-- STATUS_CHANGED: título discreto -->
+              <div th:if="${isStatus}"
+                   class="small"
+                   style="color: rgba(255,255,255,.62); text-transform:lowercase; letter-spacing:.2px;">
+                mudança de estado
+              </div>
+
+              <!-- outros tipos: pill -->
+              <div th:if="${!isStatus}" style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                <span style="display:inline-flex; align-items:center; padding:6px 10px; border-radius:999px;
+                             border:1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.04); color: rgba(255,255,255,.92);
+                             font-weight:800; font-size:12px;">
+                  <span th:switch="${e.type != null ? e.type.name() : ''}">
+                    <span th:case="'VISIT_SCHEDULED'">Visita marcada</span>
+                    <span th:case="'EMAIL_SENT'">Email enviado</span>
+                    <span th:case="'REJECTED'">Rejeitado</span>
+                    <span th:case="'REQUEST_CREATED'">Pedido criado</span>
+                    <span th:case="*" th:text="${e.type != null ? e.type.name() : 'Atualização'}"></span>
+                  </span>
+                </span>
+              </div>
+
+              <!-- linha principal -->
+              <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+
+                <!-- STATUS_CHANGED: De X → Y -->
+                <div th:if="${hasArrow}" style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                  <span style="color: rgba(255,255,255,.72); font-weight:700;">De</span>
+
+                  <span style="padding:6px 10px; border-radius:999px; border:1px solid rgba(255,255,255,.14);
+                               background: rgba(255,255,255,.04); color: rgba(255,255,255,.92); font-weight:800; font-size:12px;">
+                    <span th:switch="${fromKey}">
+                      <span th:case="'PENDENTE'">Pendente</span>
+                      <span th:case="'EM_ANALISE'">Em análise</span>
+                      <span th:case="'APROVADO'">Aprovado</span>
+                      <span th:case="'VISITA_MARCADA'">Visita marcada</span>
+                      <span th:case="'VISITA_REALIZADA'">Visita realizada</span>
+                      <span th:case="'MICROCHIP'">Identificação (microchip)</span>
+                      <span th:case="'DESPARASITACAO'">Desparasitação</span>
+                      <span th:case="'ESTERILIZACAO'">Esterilização</span>
+                      <span th:case="'PRONTO'">Pronto</span>
+                      <span th:case="'CONTRATO_PENDENTE'">Contrato pendente</span>
+                      <span th:case="'ADOTADO'">Adotado</span>
+                      <span th:case="'CANCELADO'">Cancelado</span>
+                      <span th:case="'REJEITADO'">Rejeitado</span>
+                      <span th:case="*" th:text="${fromKey}"></span>
+                    </span>
+                  </span>
+
+                  <span style="color: rgba(255,255,255,.55); font-weight:900;">→</span>
+
+                  <span style="padding:6px 10px; border-radius:999px; border:1px solid rgba(34,197,94,.35);
+                               background: rgba(34,197,94,.12); color: rgba(255,255,255,.92); font-weight:900; font-size:12px;">
+                    <span th:switch="${toKey}">
+                      <span th:case="'PENDENTE'">Pendente</span>
+                      <span th:case="'EM_ANALISE'">Em análise</span>
+                      <span th:case="'APROVADO'">Aprovado</span>
+                      <span th:case="'VISITA_MARCADA'">Visita marcada</span>
+                      <span th:case="'VISITA_REALIZADA'">Visita realizada</span>
+                      <span th:case="'MICROCHIP'">Identificação (microchip)</span>
+                      <span th:case="'DESPARASITACAO'">Desparasitação</span>
+                      <span th:case="'ESTERILIZACAO'">Esterilização</span>
+                      <span th:case="'PRONTO'">Pronto</span>
+                      <span th:case="'CONTRATO_PENDENTE'">Contrato pendente</span>
+                      <span th:case="'ADOTADO'">Adotado</span>
+                      <span th:case="'CANCELADO'">Cancelado</span>
+                      <span th:case="'REJEITADO'">Rejeitado</span>
+                      <span th:case="*" th:text="${toKey}"></span>
+                    </span>
+                  </span>
+                </div>
+
+              </div>
+
+            </div>
+
+            <!-- data -->
+            <div class="small" style="color: rgba(255,255,255,.60);"
+                 th:text="${#temporals.format(e.createdAt, 'dd/MM/yyyy HH:mm')}"></div>
+          </div>
+
+          <!-- Nota (apenas 1x; evita duplicações) -->
+          <div th:if="${note != null and !#strings.isEmpty(note)
+                      and !(hasArrow and (#strings.trim(note) == ('Estado: ' + fromKey + ' -> ' + toKey)))}"
+               style="margin-top:10px; color: rgba(255,255,255,.80); white-space:pre-line;"
+               th:text="${note}">
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </section>
+</main>
+
+</body>
+</html>

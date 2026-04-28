@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin — Chat</title>
+  <link rel="stylesheet" th:href="@{/css/styles.css}">
+  <link rel="icon" type="image/x-icon" th:href="@{'/favicon.ico?v=' + ${#dates.createNow().time}}">
+  <link rel="shortcut icon" type="image/x-icon" th:href="@{'/favicon.ico?v=' + ${#dates.createNow().time}}">
+</head>
+<body>
+
+<main class="auth">
+  <section class="auth-card" style="grid-template-columns: 1fr; width: min(1000px, 100%);">
+    <div class="panel" style="padding: 22px;">
+      <div style="display:flex; justify-content:space-between; gap:12px; align-items:center;">
+        <div>
+          <h2 style="margin:0;">Chat — <span th:text="${clientName}">Cliente</span></h2>
+          <div class="subtitle" style="margin:6px 0 0 0;">
+            Processo <span th:text="${adoptionId}">0</span>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:10px;">
+          <form th:action="@{/admin/chats/{id}/assign(id=${conversationId})}" method="post" style="margin:0;">
+            <button class="btn" type="submit" style="width:auto; padding:10px 14px;">Assumir</button>
+          </form>
+          <a class="btn" style="width:auto; padding:10px 14px;" th:href="@{/admin/chats}">Voltar</a>
+        </div>
+      </div>
+
+      <div id="messages"
+           style="margin-top:16px; border:1px solid rgba(255,255,255,.10); border-radius:14px; padding:14px; height:420px; overflow:auto;">
+        <div style="opacity:.8;">A carregar…</div>
+      </div>
+
+      <form id="sendForm" style="margin-top:14px; display:grid; gap:10px;">
+                <textarea id="body" name="body" rows="3"
+                          placeholder="Escreve a tua mensagem…"
+                          style="width:100%; border-radius:14px; padding:12px; border:1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.06); color: white;"></textarea>
+
+        <input id="files" name="files" type="file" multiple
+               accept="image/jpeg,image/png,image/webp,application/pdf"
+               style="color:white;">
+
+        <div style="display:flex; gap:10px; align-items:center; justify-content:flex-end;">
+          <button class="btn" type="submit" style="width:auto; padding:10px 14px;">Enviar</button>
+        </div>
+      </form>
+
+      <div id="err" class="alert alert-error" style="display:none; margin-top:12px;">
+        <span class="dot"></span>
+        <div id="errTxt"></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script th:inline="javascript">
+  const conversationId = /*[[${conversationId}]]*/ 0;
+</script>
+
+<script>
+  // reusa o mesmo JS do cliente (copiado)
+  const box = document.getElementById('messages');
+  const form = document.getElementById('sendForm');
+  const err = document.getElementById('err');
+  const errTxt = document.getElementById('errTxt');
+
+  let lastId = 0;
+  let firstLoad = true;
+
+  function showError(msg) {
+    err.style.display = 'block';
+    errTxt.textContent = msg || 'Erro.';
+    setTimeout(() => err.style.display = 'none', 5000);
+  }
+  function escapeHtml(s) {
+    return (s || '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
+  function renderMessage(m) {
+    const wrap = document.createElement('div');
+    wrap.style.margin = '10px 0';
+    wrap.style.display = 'flex';
+    wrap.style.justifyContent = m.mine ? 'flex-end' : 'flex-start';
+
+    const bubble = document.createElement('div');
+    bubble.style.maxWidth = '76%';
+    bubble.style.border = '1px solid rgba(255,255,255,.12)';
+    bubble.style.borderRadius = '14px';
+    bubble.style.padding = '10px 12px';
+    bubble.style.background = m.mine ? 'rgba(59,130,246,.12)' : 'rgba(255,255,255,.06)';
+
+    const meta = document.createElement('div');
+    meta.style.opacity = '.75';
+    meta.style.fontSize = '12px';
+    meta.style.marginBottom = '6px';
+    meta.textContent = `${m.senderName} • ${new Date(m.createdAt).toLocaleString()}`;
+
+    const body = document.createElement('div');
+    body.innerHTML = escapeHtml(m.body).replace(/\n/g, '<br>');
+
+    bubble.appendChild(meta);
+    bubble.appendChild(body);
+
+    if (m.attachments && m.attachments.length) {
+      const attBox = document.createElement('div');
+      attBox.style.marginTop = '10px';
+      attBox.style.display = 'grid';
+      attBox.style.gap = '6px';
+
+      m.attachments.forEach(a => {
+        const link = document.createElement('a');
+        link.href = a.downloadUrl;
+        link.textContent = `📎 ${a.name} (${Math.round(a.sizeBytes/1024)} KB)`;
+        link.style.color = 'rgba(255,255,255,.92)';
+        link.style.textDecoration = 'underline';
+        link.target = '_blank';
+        attBox.appendChild(link);
+      });
+
+      bubble.appendChild(attBox);
+    }
+
+    wrap.appendChild(bubble);
+    return wrap;
+  }
+
+  async function poll() {
+    try {
+      const url = `/api/chat/conversations/${conversationId}/messages` + (lastId ? `?afterId=${lastId}` : '');
+      const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+      if (!res.ok) throw new Error('Falha a carregar mensagens.');
+      const data = await res.json();
+
+      if (firstLoad) {
+        box.innerHTML = '';
+        firstLoad = false;
+      }
+
+      if (Array.isArray(data) && data.length) {
+        data.forEach(m => {
+          box.appendChild(renderMessage(m));
+          lastId = Math.max(lastId, m.id);
+        });
+        box.scrollTop = box.scrollHeight;
+      }
+    } catch (e) {
+      console.warn(e);
+    }
+  }
+
+  form.addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+
+    const fd = new FormData();
+    fd.append('body', document.getElementById('body').value || '');
+    const files = document.getElementById('files').files;
+    for (const f of files) fd.append('files', f);
+
+    try {
+      const res = await fetch(`/api/chat/conversations/${conversationId}/messages`, {
+        method: 'POST',
+        body: fd
+      });
+      if (!res.ok) {
+        const t = await res.text();
+        throw new Error(t || 'Falha ao enviar.');
+      }
+      document.getElementById('body').value = '';
+      document.getElementById('files').value = '';
+      await poll();
+    } catch (e) {
+      showError(e.message);
+    }
+  });
+
+  poll();
+  setInterval(poll, 2500);
+</script>
+
+</body>
+</html>

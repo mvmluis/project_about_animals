@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${isEdit} ? 'Pet Alert — Editar registo' : 'Pet Alert — Novo registo'">Pet Alert — Novo registo</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}" />
+    <link rel="icon" type="image/x-icon" th:href="@{'/favicon.ico?v=' + ${#dates.createNow().time}}">
+    <link rel="shortcut icon" type="image/x-icon" th:href="@{'/favicon.ico?v=' + ${#dates.createNow().time}}">
+</head>
+<body>
+
+<main class="auth">
+    <section class="auth-card" style="grid-template-columns: 1fr; width: min(900px, 100%);">
+
+        <aside class="brand" style="padding: 26px;">
+            <h1 th:text="${isEdit} ? 'Editar registo 🐕‍🦺' : 'Novo registo 🐕‍🦺'">Novo registo 🐕‍🦺</h1>
+            <p>
+                Preenche a informação do animal para criar um report com base na <strong>localização</strong>.
+                Podes atualizar depois com estado/resgate/adoção.
+            </p>
+
+            <div class="badges">
+                <span class="badge">Perdidos</span>
+                <span class="badge">Resgate</span>
+                <span class="badge">Adoção</span>
+            </div>
+
+            <p class="small" style="margin-top:18px;">
+                Dica: quanto mais detalhe no local + foto, maior a probabilidade de resposta rápida.
+            </p>
+        </aside>
+
+        <div class="panel">
+            <h2 th:text="${isEdit} ? 'Editar registo' : 'Novo registo'">Novo registo</h2>
+            <div class="subtitle">
+                Campos obrigatórios: título, espécie, local e data/hora.
+            </div>
+
+            <div class="alert alert-error" th:if="${error}">
+                <span class="dot"></span>
+                <div th:text="${error}"></div>
+            </div>
+
+            <form class="form"
+                  th:action="${isEdit} ? '/reports/' + ${id} : '/reports'"
+                  th:object="${form}"
+                  method="post"
+                  enctype="multipart/form-data"
+                  autocomplete="on">
+
+                <div class="field">
+                    <label for="title">Título</label>
+                    <div class="input">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M6 7h12M6 12h12M6 17h8" stroke="white" stroke-opacity=".9" stroke-width="1.5"/>
+                        </svg>
+                        <input id="title" type="text" th:field="*{title}" placeholder="Ex.: Cão perdido perto do metro" />
+                    </div>
+                    <div class="error" th:if="${#fields.hasErrors('title')}" th:errors="*{title}"></div>
+                </div>
+
+                <div class="field">
+                    <label for="species">Espécie</label>
+                    <div class="input">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M7 14c1.5 0 2.5-1.2 2.5-2.7S8.5 9 7 9s-2.5 1.2-2.5 2.3S5.5 14 7 14Z" stroke="white" stroke-opacity=".9" stroke-width="1.5"/>
+                            <path d="M17 14c1.5 0 2.5-1.2 2.5-2.7S18.5 9 17 9s-2.5 1.2-2.5 2.3S15.5 14 17 14Z" stroke="white" stroke-opacity=".9" stroke-width="1.5"/>
+                            <path d="M12 18c3 0 5-1.8 5-4.2S15 8 12 8 7 11.4 7 13.8 9 18 12 18Z" stroke="white" stroke-opacity=".9" stroke-width="1.5"/>
+                        </svg>
+                        <input id="species" type="text" th:field="*{species}" placeholder="Ex.: Cão, Gato" />
+                    </div>
+                    <div class="error" th:if="${#fields.hasErrors('species')}" th:errors="*{species}"></div>
+                </div>
+
+                <div class="field">
+                    <label for="breed">Raça (opcional)</label>
+                    <div class="input">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M6 16c2-1 4-1 6 0s4 1 6 0" stroke="white" stroke-opacity=".9" stroke-width="1.5"/>
+                            <path d="M7 9h10" stroke="white" stroke-opacity=".9" stroke-width="1.5"/>
+                        </svg>
+                        <input id="breed" type="text" th:field="*{breed}" placeholder="Ex.: Labrador" />
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label for="color">Cor (opcional)</label>
+                    <div class="input">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M12 3c3 3 6 7 6 10a6 6 0 1 1-12 0c0-3 3-7 6-10Z" stroke="white" stroke-opacity=".9" stroke-width="1.5"/>
+                        </svg>
+                        <input id="color" type="text" th:field="*{color}" placeholder="Ex.: Castanho, Preto e branco" />
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label for="size">Porte (opcional)</label>
+                    <div class="input">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M7 17h10M9 7h6M8 17V7m8 10V7" stroke="white" stroke-opacity=".9" stroke-width="1.5"/>
+                        </svg>
+                        <input id="size" type="text" th:field="*{size}" placeholder="Ex.: Pequeno / Médio / Grande" />
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label for="approxAge">Idade aproximada (opcional)</label>
+                    <div class="input">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M12 7v6l4 2" stroke="white" stroke-opacity=".9" stroke-width="1.5"/>
+                            <path d="M12 21a9 9 0 1 0-9-9 9 9 0 0 0 9 9Z" stroke="white" stroke-opacity=".9" stroke-width="1.5"/>
+                        </svg>
+                        <input id="approxAge" type="text" th:field="*{approxAge}" placeholder="Ex.: ~2 anos" />
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label for="locationText">Local</label>
+                    <div class="input">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M12 21s7-5.3 7-11a7 7 0 1 0-14 0c0 5.7 7 11 7 11Z" stroke="white" stroke-opacity=".9" stroke-width="1.5"/>
+                            <path d="M12 10.5a2.2 2.2 0 1 0 0-4.4 2.2 2.2 0 0 0 0 4.4Z" stroke="white" stroke-opacity=".9" stroke-width="1.5"/>
+                        </svg>
+                        <input id="locationText" type="text" th:field="*{locationText}"
+                               placeholder="Ex.: Porto — perto da estação X" />
+                    </div>
+                    <div class="error" th:if="${#fields.hasErrors('locationText')}" th:errors="*{locationText}"></div>
+
+                    <!-- Sem custos (sem API): apenas abre o Google Maps -->
+                    <div class="small" style="margin-top:8px; color: rgba(255,255,255,.60);">
+                        <a href="https://www.google.com/maps" target="_blank" rel="noopener">
+                            Abrir Google Maps para escolher o local
+                        </a>
+                        <span style="color: rgba(255,255,255,.55);">
+                            — copia a morada/coords e cola aqui.
+                        </span>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label for="foundAt">Data/Hora</label>
+                    <div class="input">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M7 3v3M17 3v3M4 8h16" stroke="white" stroke-opacity=".9" stroke-width="1.5"/>
+                            <path d="M6 6h12v15H6V6Z" stroke="white" stroke-opacity=".9" stroke-width="1.5"/>
+                            <path d="M12 11v4l3 2" stroke="white" stroke-opacity=".9" stroke-width="1.5"/>
+                        </svg>
+                        <input id="foundAt" type="datetime-local" th:field="*{foundAt}" />
+                    </div>
+                    <div class="error" th:if="${#fields.hasErrors('foundAt')}" th:errors="*{foundAt}"></div>
+                </div>
+
+                <div class="field">
+                    <label for="notes">Notas</label>
+                    <div class="input">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M7 7h10M7 11h10M7 15h6" stroke="white" stroke-opacity=".9" stroke-width="1.5"/>
+                            <path d="M6 3h12v18H6V3Z" stroke="white" stroke-opacity=".9" stroke-width="1.5"/>
+                        </svg>
+                        <input id="notes" type="text" th:field="*{notes}" placeholder="Ex.: Muito assustado, coleira azul..." />
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label for="photo">Foto (JPG/PNG/WebP, opcional)</label>
+                    <div class="input">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M4 7h16v12H4V7Z" stroke="white" stroke-opacity=".9" stroke-width="1.5"/>
+                            <path d="M9 7l1.2-2h3.6L15 7" stroke="white" stroke-opacity=".9" stroke-width="1.5"/>
+                            <path d="M12 16a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" stroke="white" stroke-opacity=".9" stroke-width="1.5"/>
+                        </svg>
+                        <input id="photo" type="file" name="photo"
+                               accept="image/png,image/jpeg,image/webp"
+                               style="padding-left:42px; padding-top:10px; padding-bottom:10px;" />
+                    </div>
+                    <div class="small" style="margin-top:6px; color: rgba(255,255,255,.55);">
+                        Tenta usar uma foto nítida do focinho/corpo e, se possível, do local.
+                    </div>
+                </div>
+
+                <button class="btn" type="submit" th:text="${isEdit} ? 'Guardar' : 'Criar'">Criar</button>
+
+                <div class="link-row">
+                    <a th:href="@{/reports}"
+                       style="display:inline-flex; align-items:center; gap:8px; padding:10px 14px; border-radius:14px; border:1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.06); color: rgba(255,255,255,.92); text-decoration:none;">
+                        Voltar
+                    </a>
+                </div>
+
+            </form>
+        </div>
+
+    </section>
+</main>
+
+</body>
+</html>

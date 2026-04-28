@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pet Alerta — Minhas adoções</title>
+  <link rel="stylesheet" th:href="@{/css/styles.css}">
+  <link rel="icon" type="image/x-icon" th:href="@{'/favicon.ico?v=' + ${#dates.createNow().time}}">
+  <link rel="shortcut icon" type="image/x-icon" th:href="@{'/favicon.ico?v=' + ${#dates.createNow().time}}">
+</head>
+<body>
+
+<main class="auth">
+  <section class="auth-card" style="grid-template-columns: 1fr; width: min(980px, 100%);">
+    <div class="panel" style="padding: 26px;">
+
+      <div style="display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:14px;">
+        <div>
+          <h2 style="margin:0 0 6px 0;">Minhas adoções</h2>
+          <div class="subtitle" style="margin:0;">Acompanha aqui o estado e as atualizações do processo.</div>
+        </div>
+
+        <a th:href="@{/reports}"
+           style="height:40px; display:inline-flex; align-items:center; justify-content:center; padding:10px 14px; border-radius:14px;
+                  border:1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.06); color: rgba(255,255,255,.92); text-decoration:none;">
+          Voltar aos reports
+        </a>
+      </div>
+
+      <div style="border:1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.06); border-radius:18px; overflow:hidden;">
+        <div style="overflow:auto;">
+          <table style="width:100%; border-collapse: collapse; min-width: 860px;">
+            <thead>
+            <tr style="background: rgba(255,255,255,.06);">
+              <th style="text-align:left; padding:14px; font-size:12px; color: rgba(255,255,255,.70); border-bottom:1px solid rgba(255,255,255,.12);">Pedido</th>
+              <th style="text-align:left; padding:14px; font-size:12px; color: rgba(255,255,255,.70); border-bottom:1px solid rgba(255,255,255,.12);">Report</th>
+              <th style="text-align:left; padding:14px; font-size:12px; color: rgba(255,255,255,.70); border-bottom:1px solid rgba(255,255,255,.12);">Estado</th>
+              <th style="text-align:left; padding:14px; font-size:12px; color: rgba(255,255,255,.70); border-bottom:1px solid rgba(255,255,255,.12);">Abrir</th>
+            </tr>
+            </thead>
+
+            <tbody>
+            <tr th:each="a : ${items}"
+                style="border-bottom:1px solid rgba(255,255,255,.10);"
+                onmouseover="this.style.background='rgba(255,255,255,.04)'"
+                onmouseout="this.style.background='transparent'">
+
+              <td style="padding:14px; color: rgba(255,255,255,.92);" th:text="${a.id}"></td>
+
+              <td style="padding:14px;">
+                <div style="color: rgba(255,255,255,.92); font-weight:700;">
+                  #<span th:text="${a.report.id}"></span>
+                </div>
+                <div class="small" style="margin-top:6px; color: rgba(255,255,255,.60);" th:text="${a.report.title}"></div>
+              </td>
+
+              <td style="padding:14px;">
+                <span style="display:inline-flex; align-items:center; padding:6px 10px; border-radius:999px;
+                             border:1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.06); color: rgba(255,255,255,.85);">
+
+                  <span th:if="${a.status == null}">—</span>
+
+                  <span th:if="${a.status != null}"
+                        th:switch="${a.status.name()}">
+                    <span th:case="'PENDENTE'">Pendente</span>
+                    <span th:case="'EM_ANALISE'">Em análise</span>
+                    <span th:case="'APROVADO'">Aprovado</span>
+
+                    <span th:case="'VISITA_MARCADA'">Visita marcada</span>
+                    <span th:case="'VISITA_REALIZADA'">Visita realizada</span>
+
+                    <span th:case="'MICROCHIP'">Identificação (microchip)</span>
+                    <span th:case="'DESPARASITACAO'">Desparasitação</span>
+                    <span th:case="'ESTERILIZACAO'">Esterilização</span>
+                    <span th:case="'PRONTO'">Pronto — já pode ter o seu melhor amigo!</span>
+
+                    <span th:case="'CONTRATO_PENDENTE'">Contrato pendente</span>
+                    <span th:case="'ADOTADO'">Adotado</span>
+
+                    <span th:case="'CANCELADO'">Cancelado</span>
+                    <span th:case="'REJEITADO'">Rejeitado</span>
+
+                    <span th:case="*"
+                          th:text="${a.status.name()}"></span>
+                  </span>
+                </span>
+              </td>
+
+              <td style="padding:14px;">
+                <a th:href="@{/my-adoptions/{id}(id=${a.id})}"
+                   style="display:inline-flex; align-items:center; gap:8px; padding:8px 12px; border-radius:12px;
+                          border:1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.06);
+                          color: rgba(255,255,255,.92); text-decoration:none;">
+                  Ver processo
+                </a>
+              </td>
+            </tr>
+
+            <tr th:if="${items == null or #lists.isEmpty(items)}">
+              <td colspan="4" style="padding:18px;">
+                <div class="alert alert-warning" style="margin:0;">
+                  <span class="dot"></span>
+                  <div>Ainda não tens pedidos de adoção.</div>
+                </div>
+              </td>
+            </tr>
+
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </section>
+</main>
+
+</body>
+</html>

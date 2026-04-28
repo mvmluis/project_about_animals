@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Admin — Chats</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <link rel="icon" type="image/x-icon" th:href="@{'/favicon.ico?v=' + ${#dates.createNow().time}}">
+    <link rel="shortcut icon" type="image/x-icon" th:href="@{'/favicon.ico?v=' + ${#dates.createNow().time}}">
+</head>
+<body>
+<main class="auth">
+    <section class="auth-card" style="grid-template-columns: 1fr; width: min(1100px, 100%);">
+        <div class="panel" style="padding:22px;">
+            <h2 style="margin:0;">Chats</h2>
+            <div class="subtitle" style="margin-top:6px;">Conversas por processo de adoção.</div>
+
+            <div style="margin-top:14px; display:grid; gap:10px;">
+                <div th:if="${#lists.isEmpty(items)}" style="opacity:.8;">Sem conversas.</div>
+
+                <a th:each="c : ${items}"
+                   th:href="@{/admin/chats/{id}(id=${c.id})}"
+                   style="display:block; padding:14px; border-radius:14px; border:1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.05); color:white; text-decoration:none;">
+                    <div style="display:flex; justify-content:space-between; gap:10px;">
+                        <div>
+                            <div style="font-weight:900;">
+                                <span th:text="${c.client.name}">Cliente</span>
+                                <span style="opacity:.75; font-weight:700;"> — Proc. </span>
+                                <span style="opacity:.9;" th:text="${c.adoptionRequest.id}">0</span>
+                            </div>
+                            <div style="opacity:.75; margin-top:6px;">
+                                Status: <span th:text="${c.status}">OPEN</span>
+                                <span th:if="${c.admin != null}"> • Admin: <span th:text="${c.admin.name}"></span></span>
+                            </div>
+                        </div>
+                        <div style="opacity:.75; text-align:right;">
+                            <div>Última</div>
+                            <div th:text="${c.lastMessageAt != null ? #temporals.format(c.lastMessageAt, 'yyyy-MM-dd HH:mm') : '-'}">-</div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+        </div>
+    </section>
+</main>
+</body>
+</html>
